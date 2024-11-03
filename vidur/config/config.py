@@ -664,6 +664,13 @@ class SimulationConfig(ABC):
         instance.__flat_config__ = flat_config
         return instance
 
+    @classmethod
+    def create_from_yml(cls, yml: str):
+        flat_config = create_flat_dataclass(cls).create_from_yml(yml)
+        instance = flat_config.reconstruct_original_dataclass()
+        instance.__flat_config__ = flat_config
+        return instance
+
     def to_dict(self):
         if not hasattr(self, "__flat_config__"):
             logger.warning("Flat config not found. Returning the original config.")
