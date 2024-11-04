@@ -89,7 +89,10 @@ class TraceRequestLengthGenerator(BaseRequestLengthGenerator):
 
     def get_next_num_tokens(self) -> Tuple[float, float]:
         if self.next_request_idx >= len(self.trace_df):
-            return None, None
+            if self.config.wrap_around:
+                self.next_request_idx = 0
+            else:
+                return None, None
 
         row = self.trace_df.iloc[self.next_request_idx]
         self.next_request_idx += 1

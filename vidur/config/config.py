@@ -125,6 +125,10 @@ class TraceRequestLengthGeneratorConfig(BaseRequestLengthGeneratorConfig):
             "help": "Decode scale factor for the trace request length generator."
         },
     )
+    wrap_around: bool = field(
+        default=False,
+        metadata={"help": "Wrap around for the trace request length generator."},
+    )
 
     @staticmethod
     def get_type():
