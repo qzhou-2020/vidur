@@ -208,3 +208,17 @@ for random forrest execution time predictor,
 - `random_forrest_execution_time_predictor_config_max_depth`: maximum depth of the trees in the random forest.
 - `random_forrest_execution_time_predictor_config_min_samples_split`: minimum number of samples required to split an internal node in the random forest.
 
+## capacity management tips
+
+Each scheduler has different memory management and batch formation strategies. Here are some tips for capacity management:
+
+- vLLM scheduler and Sarathi scheduler have better capacity management implementations. wrong setup is okay.
+- the rest of the schedulers are not as good at capacity management. wrong setup will lead to runtime errors.
+
+one can set `batch_size_cap` to a small number to reduce the risk of runtime errors.
+
+- for ORCA scheduler, batch_size_cap <= (prediction_max_prefill_per_request / prefill_tokens) ** 2
+
+- for FasterTransformer scheduler,
+
+- for LightLLM scheduler,

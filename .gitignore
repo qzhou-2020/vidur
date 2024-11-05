@@ -179,3 +179,4 @@ experiments/profiling/get_profiled_data_from_trace.ipynb
 env_3
 tmp
 .vscode
+.DS_Store
