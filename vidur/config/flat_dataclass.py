@@ -136,6 +136,32 @@ def create_from_cli_args(cls) -> Any:
     return cls(**vars(args))
 
 
+@classmethod
+def create_from_yml(cls: Any, yml: str) -> Any:
+    """
+    Creates a FlatClass instance from a YAML configuration file.
+    """
+
+    def flatten_dict(d, parent_key='', sep='_'):
+        items = []
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
+    
+    import yaml # type: ignore
+
+    with open(yml, "r") as f:
+        config_dict = yaml.safe_load(f)
+
+    config_dict = flatten_dict(config_dict)
+
+    return cls(**config_dict)
+
+
 def create_flat_dataclass(input_dataclass: Any) -> Any:
     """
     Creates a new FlatClass type by recursively flattening the input dataclass.
@@ -226,5 +252,6 @@ def create_flat_dataclass(input_dataclass: Any) -> Any:
     # Helper methods
     FlatClass.reconstruct_original_dataclass = reconstruct_original_dataclass
     FlatClass.create_from_cli_args = create_from_cli_args
+    FlatClass.create_from_yml = create_from_yml
 
     return FlatClass

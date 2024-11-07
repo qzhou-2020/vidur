@@ -121,7 +121,7 @@ python -m vidur.main  \
 --[vllm|lightllm]_scheduler_config_max_tokens_in_batch 4096
 ```
 
-The simulator supports a plethora of parameters for the simulation description which can be found [here](docs/launch_parameters.md).
+The simulator supports a plethora of parameters for the simulation description which can be found [here](docs/config.md).
 
 The metrics will be logged to wandb directly and a copy will be stored in the `simulator_output` directory along with the chrome trace. A description of all the logged metrics can be found [here](docs/metrics.md).
 

@@ -1,0 +1,48 @@
+# this file defines the configuration in Menache et al. 2024.
+# LLaMa2-70B model on two linked A100 GPUs.
+# interval: poisson, with 200 qps
+
+
+cluster_config:
+  num_replicas: 1
+
+replica_config:
+  device: a100
+  # network_device: a100_pairwise_nvlink # two linked A100 GPUs
+  model_name: meta-llama/Llama-2-7b-hf # LLaMa2-7B
+  tensor_parallel_size: 1
+  num_pipeline_stages: 1
+
+request_generator_config:
+  type: synthetic
+synthetic_request_generator_config:
+  duration: 100 # T = 100
+  # num_requests: 512 # horizon
+
+# alternative: trace, zipf, uniform, fixed
+# if alternative is selected, trace_file is not needed.
+length_generator_config:
+  type: trace
+trace_request_length_generator_config:
+  trace_file: ./data/processed_traces/splitwise_conv.csv # guess: LMsys Chat-1M
+
+# alternatives: static, p
+interval_generator_config:
+  type: poisson
+poisson_request_interval_generator_config:
+  qps: 200
+
+# alternative: lightllm, orca, faster_transformer, sarathi
+# vllm and orca are prefill prioritized
+# faster_transformer is decode prioritized
+# sarathi is stall-free schedule
+replica_scheduler_config:
+  type: vllm
+vllm_scheduler_config:
+  batch_size_cap: 64
+  max_tokens_in_batch: 2048
+
+execution_time_predictor_config:
+  type: linear_regression
+linear_regression_execution_time_predictor_config:
+  skip_cpu_overhead_modeling: true

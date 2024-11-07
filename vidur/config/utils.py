@@ -1,5 +1,6 @@
 from dataclasses import fields, is_dataclass
 from typing import Union, get_args, get_origin
+import json
 
 primitive_types = {int, str, float, bool, type(None)}
 
@@ -66,22 +67,33 @@ def is_subclass(cls, parent: type) -> bool:
 
 
 def dataclass_to_dict(obj):
-    if isinstance(obj, list):
-        return [dataclass_to_dict(item) for item in obj]
-    elif is_dataclass(obj):
-        data = {}
-        for field in fields(obj):
-            value = getattr(obj, field.name)
-            data[field.name] = dataclass_to_dict(value)
-        # Include members created in __post_init__
-        for key, value in obj.__dict__.items():
-            if key not in data:
-                data[key] = dataclass_to_dict(value)
-        # Include the name of the class
-        if hasattr(obj, "get_type") and callable(getattr(obj, "get_type")):
-            data["name"] = str(obj.get_type())
-        elif hasattr(obj, "get_name") and callable(getattr(obj, "get_name")):
-            data["name"] = obj.get_name()
-        return data
-    else:
+    """Convert a dataclass instance to a dict, skipping over non-serializable attributes."""
+    if not hasattr(obj, "__dict__"):
         return obj
+    
+    result = {}
+    for key, value in obj.__dict__.items():
+        # Skip functions and methods
+        if callable(value):
+            continue
+            
+        # Handle nested dataclasses
+        if hasattr(value, "__dict__"):
+            result[key] = dataclass_to_dict(value)
+        # Handle lists/tuples
+        elif isinstance(value, (list, tuple)):
+            result[key] = [dataclass_to_dict(item) for item in value]
+        # Handle dictionaries
+        elif isinstance(value, dict):
+            result[key] = {k: dataclass_to_dict(v) for k, v in value.items()}
+        # Handle basic types
+        else:
+            try:
+                # Test if value is JSON serializable
+                json.dumps(value)
+                result[key] = value
+            except (TypeError, OverflowError):
+                # Skip non-serializable values
+                continue
+                
+    return result

@@ -125,6 +125,10 @@ class TraceRequestLengthGeneratorConfig(BaseRequestLengthGeneratorConfig):
             "help": "Decode scale factor for the trace request length generator."
         },
     )
+    wrap_around: bool = field(
+        default=False,
+        metadata={"help": "Wrap around for the trace request length generator."},
+    )
 
     @staticmethod
     def get_type():
@@ -660,6 +664,13 @@ class SimulationConfig(ABC):
     @classmethod
     def create_from_cli_args(cls):
         flat_config = create_flat_dataclass(cls).create_from_cli_args()
+        instance = flat_config.reconstruct_original_dataclass()
+        instance.__flat_config__ = flat_config
+        return instance
+
+    @classmethod
+    def create_from_yml(cls, yml: str):
+        flat_config = create_flat_dataclass(cls).create_from_yml(yml)
         instance = flat_config.reconstruct_original_dataclass()
         instance.__flat_config__ = flat_config
         return instance

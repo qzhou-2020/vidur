@@ -1,0 +1,50 @@
+# this file defines the configuration in Menache et al. 2024.
+# LLaMa2-7B model on A100 GPU
+# interval: poisson, with 200 qps
+# length: uniform, 128 to 2048, prefill to decode ratio = 4.0
+# T = 100
+
+cluster_config:
+  num_replicas: 1
+
+replica_config:
+  device: a100
+  model_name: meta-llama/Llama-2-7b-hf # LLaMa2-7B
+  tensor_parallel_size: 1
+  num_pipeline_stages: 1
+
+request_generator_config:
+  type: synthetic
+synthetic_request_generator_config:
+  duration: 100 # T = 100
+
+# interval: poisson, with 200 qps
+interval_generator_config:
+  type: poisson
+poisson_request_interval_generator_config:
+  qps: 200
+
+length_generator_config:
+  type: fixed
+fixed_request_length_generator_config:
+  prefill_tokens: 1024
+  decode_tokens: 128
+
+replica_scheduler_config:
+  type: faster_transformer
+faster_transformer_scheduler_config:
+  batch_size_cap: 4
+  block_size: 16
+
+execution_time_predictor_config:
+  type: linear_regression
+linear_regression_execution_time_predictor_config:
+  skip_cpu_overhead_modeling: true
+  prediction_max_prefill_chunk_size: 2048
+  prediction_max_tokens_per_request: 4096
+  polynomial_degree: [2]
+  fit_intercept: [true]
+  polynomial_include_bias: [true]
+
+metrics_config:
+  output_dir: ./simulator_output/faster_transformer/T100
