@@ -39,11 +39,11 @@ firmware:
     - `lor`: LOR scheduler
 
 - `replica_scheduler_config_type`: type of replica scheduler to use.
-    - `vllm`: vLLM scheduler
+    - `vllm`: vLLM scheduler, prefill priority
     - `lightllm`: LightLLM scheduler
-    - `orca`: ORCA scheduler
-    - `sarathi`: Sarathi scheduler
-    - `faster_transformer`: FasterTransformer scheduler
+    - `orca`: ORCA scheduler, prefill priority
+    - `sarathi`: Sarathi scheduler, stall-free
+    - `faster_transformer`: FasterTransformer scheduler, decode priority
 
 Global scheduler distributes requests to replicas. Replica scheduler monitors the replica's GPU usage and decides when to send a new batch to the GPU. For each replica type, there will be more configurations.
 
@@ -210,15 +210,18 @@ for random forrest execution time predictor,
 
 ## capacity management tips
 
-Each scheduler has different memory management and batch formation strategies. Here are some tips for capacity management:
+execution time predictor has `attn_prefill`, `attn_decode`, and `attn_rope` models.
 
-- vLLM scheduler and Sarathi scheduler have better capacity management implementations. wrong setup is okay.
-- the rest of the schedulers are not as good at capacity management. wrong setup will lead to runtime errors.
+- `attn_prefill`: uses `kv_cache_size` and `prefill_chunk_size_squared` to identify time for prefill operations.
+    - `kv_cache_size`: starts from 1 to `prediction_max_tokens_per_request`, with step size `kv_cache_prediction_granularity`.
+    - `prefill_chunk_size_squared`: starts from 1 to `prediction_max_prefill_chunk_size`, with step size 1. Then take square.
 
-one can set `batch_size_cap` to a small number to reduce the risk of runtime errors.
+The batch size in scheduler should not lead to batch_size * prefill_max_tokens_per_request ** 2 > prediction_max_prefill_chunk_size ** 2.
 
-- for ORCA scheduler, batch_size_cap <= (prediction_max_prefill_per_request / prefill_tokens) ** 2
+- `attn_decode`: uses `batch_size` and `kv_cache_size` to identify time for decode operations.
+    - `batch_size`: starts from 1 to `prediction_max_batch_size`, with step size 1.
+    - `kv_cache_size`: see above.
 
-- for FasterTransformer scheduler,
+- `attn_rope`: uses `prediction_max_tokens_per_request` to identify time for rope operations.
 
-- for LightLLM scheduler,
+The batch size in scheduler should not lead to batch_size * prefill_max_tokens_per_request > prediction_max_tokens_per_request in execution time predictor.
